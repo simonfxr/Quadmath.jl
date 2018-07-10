@@ -1,0 +1,3 @@
+deps/lib
+deps/src/*.o
+deps/build.log

@@ -21,6 +21,7 @@ import SpecialFunctions: erf, erfc,
     besselj, besselj0, besselj1, bessely, bessely0, bessely1, gamma, lgamma
 using Compat.MathConstants
 import Compat: Sys
+import Compat: Libdl
 
 @static if Sys.isapple()
     const quadoplib = Symbol("libquadmath.0")
@@ -28,12 +29,13 @@ import Compat: Sys
 elseif Sys.isunix()
     const quadoplib = Symbol("libgcc_s.so.1")
     const libquadmath = Symbol("libquadmath.so")
-    #const mpfr_float128 = joinpath(dirname(@__FILE__),
-    #            "..", "deps", "lib", "mpfr_float128.so")
 elseif Sys.iswindows()
     const quadoplib = Symbol("libgcc_s_seh-1.dll")
     const libquadmath = Symbol("libquadmath-0.dll")
 end
+
+const mpfr_float128 = joinpath(dirname(@__FILE__),
+                               "..", "deps", "lib", "mpfr_float128.$(Libdl.dlext)")
 
 @static if Sys.isunix()
     # we use this slightly cumbersome definition to ensure that the value is passed
@@ -106,13 +108,13 @@ convert(::Type{Float128}, x::Int64) =
 
 function convert(::Type{BigFloat}, x::Float128)
     z = BigFloat()
-    res = ccall((:mpfr_set_float128, :libmpfr), Int32,
+    res = ccall((:mpfr_set_float128, mpfr_float128), Int32,
                 (Ptr{BigFloat}, Cfloat128, Int32), Ref(z), x, ROUNDING_MODE[])
     return z
 end
 
 convert(::Type{Float128}, x::BigFloat) =
-    Float128(ccall((:mpfr_get_float128, :libmpfr), Cfloat128,
+    Float128(ccall((:mpfr_get_float128, mpfr_float128), Cfloat128,
                    (Ptr{BigFloat},Int32), Ref(x), ROUNDING_MODE[]))
 
 # comparison
