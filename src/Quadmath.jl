@@ -195,8 +195,13 @@ eps(::Type{Float128}) = reinterpret(Float128, 0x3f8f0000000000000000000000000000
 realmin(::Type{Float128}) = reinterpret(Float128, 0x00010000000000000000000000000000)
 realmax(::Type{Float128}) = reinterpret(Float128, 0x7ffeffffffffffffffffffffffffffff)
 
-for sym in (:π, :e, :γ, :catalan, :φ)
-    value = reinterpret(UInt128, convert(Float128, big(eval(sym))))
+for (sym, value) in (
+    (:π, 0x4000921fb54442d18469898cc51701b8),
+    ((VERSION >= v"0.7.0-alpha" ? :ℯ : :e), 0x40005bf0a8b1457695355fb8ac404e7a),
+    (:γ, 0x3ffe2788cfc6fb618f49a37c7f0202a6),
+    (:catalan, 0x3ffed4f9713e8135d08a42b045c6fa66),
+    (:φ, 0x3fff9e3779b97f4a7c15f39cc0605cee))
+    #value = reinterpret(UInt128, convert(Float128, big(eval(sym))))
     @eval convert(::Type{Float128}, ::Irrational{$(Meta.quot(sym))}) = reinterpret(Float128, $value)
 end
 
